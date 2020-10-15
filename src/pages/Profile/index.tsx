@@ -120,32 +120,26 @@ const Profile: React.FC = () => {
     [navigation, updateUser],
   );
 
-  const handleUpdateAvatar = useCallback(() => {
-    ImagePicker.showImagePicker(
-      {
-        title: 'Selecione um avatar',
-        cancelButtonTitle: 'Cancelar',
-        takePhotoButtonTitle: 'Usar câmera',
-        chooseFromLibraryButtonTitle: 'Escolher da galeria',
-      },
-      response => {
-        if (response.didCancel) {
-          return;
-        }
+  const handleUpdateAvatar = useCallback(async () => {
+    const response = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
 
-        if (response.error) {
-          Alert.alert('Erro ao atualizar seu avatar.');
-          return;
-        }
-        const source = { uri: response.uri };
+    const data = new FormData();
 
-        console.log(source);
+    data.append('avatar', {
+      type: 'image/jpeg',
+      name: `${user.id}.jpg`,
+      uri: response.uri,
+    });
 
-        // You can also display the image using data:
-        // const source = { uri: 'data:image/jpeg;base64,' + response.data };
-      },
-    );
-  }, []);
+    api.patch('users/avatar', data).then(apiResponse => {
+      updateUser(apiResponse.data);
+    });
+  }, [updateUser, user.id]);
 
   const handleGoBack = useCallback(() => {
     navigation.goBack();
